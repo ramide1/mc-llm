@@ -1,11 +1,11 @@
-main: com.ramide1.mcgpt.App
-name: mcgpt
+main: com.ramide1.mcllm.App
+name: mcllm
 version: 1.0
-api-version: 1.21
+api-version: 1.21.4
 commands:
-  gpt:
-    description: Answer a question with gpt
-    permission: mcgpt.gpt
-  gptreload:
-    description: Reload gpt config
-    permission: mcgpt.gptreload
+  llm:
+    description: Answer a question with llm
+    permission: mcllm.llm
+  llmreload:
+    description: Reload llm configuration
+    permission: mcllm.llmreload

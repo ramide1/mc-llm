@@ -1,4 +1,4 @@
-package com.ramide1.mcgpt;
+package com.ramide1.mcllm;
 
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -11,7 +11,7 @@ public class Reload implements CommandExecutor {
         this.plugin = plugin;
     }
 
-    public boolean onCommand(CommandSender sender, Command gptreload, String label, String[] args) {
+    public boolean onCommand(CommandSender sender, Command llmreload, String label, String[] args) {
         plugin.reloadConfig();
         sender.sendMessage(plugin.pluginName + " has reloaded!");
         return true;

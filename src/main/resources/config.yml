@@ -1,5 +1,6 @@
 Config:
-  url: ""
-  instructions: ""
+  url: "https://api.openai.com/v1/chat/completions/"
+  instructions: "You are a helpful assistant in Minecraft. Respond concisely and friendly."
   apikey: ""
-  model: ""
+  model: "gpt-4o-mini"
+  googleapi: false
