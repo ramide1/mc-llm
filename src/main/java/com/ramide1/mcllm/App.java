@@ -9,10 +9,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 public class App extends JavaPlugin {
     String pluginName = "Minecraft LLM";
     File config;
-    File gptData;
-    File googleData;
-    FileConfiguration gptDataConfig;
-    FileConfiguration googleDataConfig;
+    File data;
+    FileConfiguration dataConfig;
 
     @Override
     public void onEnable() {
@@ -20,20 +18,11 @@ public class App extends JavaPlugin {
         if (!config.exists()) {
             saveDefaultConfig();
         }
-        gptData = new File(getDataFolder(), "gptdata.yml");
-        gptDataConfig = YamlConfiguration.loadConfiguration(gptData);
-        if (!gptData.exists()) {
+        data = new File(getDataFolder(), "data.yml");
+        dataConfig = YamlConfiguration.loadConfiguration(data);
+        if (!data.exists()) {
             try {
-                gptDataConfig.save(gptData);
-            } catch (Exception e) {
-                getLogger().info(ChatColor.RED + "An error has ocurred while saving data file");
-            }
-        }
-        googleData = new File(getDataFolder(), "googledata.yml");
-        googleDataConfig = YamlConfiguration.loadConfiguration(googleData);
-        if (!googleData.exists()) {
-            try {
-                googleDataConfig.save(googleData);
+                dataConfig.save(data);
             } catch (Exception e) {
                 getLogger().info(ChatColor.RED + "An error has ocurred while saving data file");
             }

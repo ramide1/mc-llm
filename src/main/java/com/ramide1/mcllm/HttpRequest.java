@@ -40,9 +40,8 @@ public class HttpRequest {
 				os.close();
 			}
 			int responseCode = con.getResponseCode();
-			if (responseCode != HttpURLConnection.HTTP_OK) {
+			if (responseCode != HttpURLConnection.HTTP_OK)
 				throw new Exception(method + " request did not work.");
-			}
 			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 			String inputLine;
 			StringBuffer responseBuffer = new StringBuffer();

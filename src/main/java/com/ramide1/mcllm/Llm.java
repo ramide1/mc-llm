@@ -20,9 +20,8 @@ public class Llm implements CommandExecutor {
     private String sendRequestToGPTApi(String url, String instructions, String sender, String question, String apikey,
             String model) {
         try {
-            if (url.isEmpty()) {
+            if (url.isEmpty())
                 throw new Exception("Url is empty.");
-            }
             String messages = "{\"role\": \"user\",\"content\": \"" + question + "\"}";
             String history = getHistory(sender, false);
             if (!history.isEmpty()) {
@@ -38,12 +37,12 @@ public class Llm implements CommandExecutor {
             request.sendRequest();
             boolean error = request.getError();
             String response = request.getResponse();
-            if (error == true) {
+            if (error == true)
                 throw new Exception(response);
-            }
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode rootNode = objectMapper.readTree(response);
-            String content = rootNode.path("choices").path(0).path("message").path("content").asText();
+            String content = rootNode.path("choices").path(0).path("message").path("content").asText()
+                    .replace("\\n", "").replace("\\", "").replace("\"", "").replace("{", "").replace("}", "");
             newHistory = newHistory + "," + "{\"role\": \"assistant\",\"content\": \"" + content + "\"}";
             saveHistory(sender, newHistory, false);
             return content;
@@ -73,13 +72,12 @@ public class Llm implements CommandExecutor {
             request.sendRequest();
             boolean error = request.getError();
             String response = request.getResponse();
-            if (error == true) {
+            if (error == true)
                 throw new Exception(response);
-            }
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode rootNode = objectMapper.readTree(response);
             String content = rootNode.path("candidates").path(0).path("content").path("parts").path(0).path("text")
-                    .asText();
+                    .asText().replace("\\n", "").replace("\\", "").replace("\"", "").replace("{", "").replace("}", "");
             newHistory = newHistory + "," + "{\"role\": \"model\",\"parts\": [" + "{\"text\": \"" + content
                     + "\"}" + "]}";
             saveHistory(sender, newHistory, true);
@@ -155,13 +153,8 @@ public class Llm implements CommandExecutor {
 
     private boolean saveHistory(String sender, String history, boolean googleApi) {
         try {
-            if (googleApi) {
-                plugin.googleDataConfig.set(sender, history);
-                plugin.googleDataConfig.save(plugin.googleData);
-            } else {
-                plugin.gptDataConfig.set(sender, history);
-                plugin.gptDataConfig.save(plugin.gptData);
-            }
+            plugin.dataConfig.set((googleApi ? "google." : "gpt.") + sender, history);
+            plugin.dataConfig.save(plugin.data);
             return true;
         } catch (Exception e) {
             return false;
@@ -169,10 +162,8 @@ public class Llm implements CommandExecutor {
     }
 
     private String getHistory(String sender, boolean googleApi) {
-        if (googleApi) {
-            return plugin.googleDataConfig.contains(sender) ? plugin.googleDataConfig.getString(sender) : "";
-        } else {
-            return plugin.gptDataConfig.contains(sender) ? plugin.gptDataConfig.getString(sender) : "";
-        }
+        return plugin.dataConfig.contains((googleApi ? "google." : "gpt.") + sender)
+                ? plugin.dataConfig.getString((googleApi ? "google." : "gpt.") + sender)
+                : "";
     }
 }
