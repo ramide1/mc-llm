@@ -7,13 +7,8 @@ import org.bukkit.command.Command;
 import org.bukkit.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Llm implements CommandExecutor {
     private App plugin;
@@ -24,69 +19,44 @@ public class Llm implements CommandExecutor {
 
     private String sendRequestToGPTApi(String url, String instructions, String sender, String question, String apikey,
             String model) {
-        String content = "Url is empty.";
-        if (!url.isEmpty()) {
-            content = "Response was not ok.";
-            try {
-                HttpURLConnection connection = (HttpURLConnection) new URI(url).toURL().openConnection();
-                connection.setRequestMethod("POST");
-                connection.setRequestProperty("Content-Type", "application/json");
-                if (!apikey.isEmpty()) {
-                    connection.setRequestProperty("Authorization", "Bearer " + apikey);
-                }
-                connection.setDoOutput(true);
-                String messages = "{\"role\": \"user\",\"content\": \"" + question + "\"}";
-                String history = getHistory(sender, false);
-                if (!history.isEmpty()) {
-                    messages = history + "," + messages;
-                }
-                String newHistory = messages;
-                if (!instructions.isEmpty()) {
-                    messages = "{\"role\": \"system\",\"content\": \"" + instructions + "\"}" + "," + messages;
-                }
-                messages = "[" + messages + "]";
-                String data = !model.isEmpty() ? "{\"model\": \"" + model + "\", \"messages\": " + messages + "}"
-                        : "{\"messages\": " + messages + "}";
-                OutputStream os = connection.getOutputStream();
-                byte[] postData = data.getBytes("utf-8");
-                os.write(postData, 0, postData.length);
-                int responseCode = connection.getResponseCode();
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    content = "Field content was not found in JSON response.";
-                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        response.append(line);
-                    }
-                    String regex = "\"content\"\\s*:\\s*\"((?:\\\\.|[^\"\\\\])*)\"";
-                    Pattern pattern = Pattern.compile(regex);
-                    Matcher matcher = pattern.matcher(response.toString());
-                    if (matcher.find()) {
-                        content = matcher.group(1).replace("\\n", "").replace("\\", "").replace("\"", "")
-                                .replace("{", "").replace("}", "");
-                        newHistory = newHistory + "," + "{\"role\": \"assistant\",\"content\": \"" + content + "\"}";
-                        saveHistory(sender, newHistory, false);
-                    }
-                }
-                connection.disconnect();
-            } catch (Exception e) {
-                content = e.getMessage();
+        try {
+            if (url.isEmpty()) {
+                throw new Exception("Url is empty.");
             }
+            String messages = "{\"role\": \"user\",\"content\": \"" + question + "\"}";
+            String history = getHistory(sender, false);
+            if (!history.isEmpty()) {
+                messages = history + "," + messages;
+            }
+            String newHistory = messages;
+            if (!instructions.isEmpty()) {
+                messages = "{\"role\": \"system\",\"content\": \"" + instructions + "\"}" + "," + messages;
+            }
+            messages = "[" + messages + "]";
+            String data = "{\"model\": \"" + model + "\", \"messages\": " + messages + "}";
+            HttpRequest request = new HttpRequest(url, "POST", "application/json", "Bearer " + apikey, data);
+            request.sendRequest();
+            boolean error = request.getError();
+            String response = request.getResponse();
+            if (error == true) {
+                throw new Exception(response);
+            }
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(response);
+            String content = rootNode.path("choices").path(0).path("message").path("content").asText();
+            newHistory = newHistory + "," + "{\"role\": \"assistant\",\"content\": \"" + content + "\"}";
+            saveHistory(sender, newHistory, false);
+            return content;
+        } catch (Exception e) {
+            return e.getMessage();
         }
-        return content;
     }
 
     private String sendRequestToGeminiApi(String instructions, String sender, String question, String apikey,
             String model) {
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key="
-                + apikey;
-        String content = "Response was not ok.";
         try {
-            HttpURLConnection connection = (HttpURLConnection) new URI(url).toURL().openConnection();
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setDoOutput(true);
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key="
+                    + apikey;
             String messages = "{\"role\": \"user\",\"parts\": [" + "{\"text\": \"" + question + "\"}" + "]}";
             String history = getHistory(sender, true);
             if (!history.isEmpty()) {
@@ -99,37 +69,27 @@ public class Llm implements CommandExecutor {
             }
             messages = "[" + messages + "]";
             String data = "{\"contents\": " + messages + "}";
-            OutputStream os = connection.getOutputStream();
-            byte[] postData = data.getBytes("utf-8");
-            os.write(postData, 0, postData.length);
-            int responseCode = connection.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                content = "Field text was not found in JSON response.";
-                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = br.readLine()) != null) {
-                    response.append(line);
-                }
-                String regex = "\"candidates\"\\s*:\\s*\\[\\s*\\{\\s*\"content\"\\s*:\\s*\\{\\s*\"parts\"\\s*:\\s*\\[\\s*\\{\\s*\"text\"\\s*:\\s*\"((?:\\\\\"|[^\"])*)\"";
-                Pattern pattern = Pattern.compile(regex);
-                Matcher matcher = pattern.matcher(response.toString());
-                if (matcher.find()) {
-                    content = matcher.group(1).replace("\\n", "").replace("\\", "").replace("\"", "").replace("{", "")
-                            .replace("}", "");
-                    newHistory = newHistory + "," + "{\"role\": \"model\",\"parts\": [" + "{\"text\": \"" + content
-                            + "\"}" + "]}";
-                    saveHistory(sender, newHistory, true);
-                }
+            HttpRequest request = new HttpRequest(url, "POST", "application/json", "", data);
+            request.sendRequest();
+            boolean error = request.getError();
+            String response = request.getResponse();
+            if (error == true) {
+                throw new Exception(response);
             }
-            connection.disconnect();
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(response);
+            String content = rootNode.path("candidates").path(0).path("content").path("parts").path(0).path("text")
+                    .asText();
+            newHistory = newHistory + "," + "{\"role\": \"model\",\"parts\": [" + "{\"text\": \"" + content
+                    + "\"}" + "]}";
+            saveHistory(sender, newHistory, true);
+            return content;
         } catch (Exception e) {
-            content = e.getMessage();
+            return e.getMessage();
         }
-        return content;
     }
 
-    public boolean onCommand(CommandSender sender, Command ai, String label, String[] args) {
+    public boolean onCommand(CommandSender sender, Command llm, String label, String[] args) {
         String url = plugin.getConfig().getString("Config.url", "https://api.openai.com/v1/chat/completions");
         String instructions = plugin.getConfig().getString("Config.instructions",
                 "You are a helpful assistant in Minecraft. Respond concisely and friendly.");

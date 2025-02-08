@@ -13,7 +13,7 @@ Restart the server to load the plugin.
 The plugin is configured using the config.yml file, which is automatically generated the first time the plugin runs. Below is an example configuration:
 ```yml
 Config:
-  url: "https://api.openai.com/v1/chat/completions/" # URL of the LLM API endpoint
+  url: "https://api.openai.com/v1/chat/completions" # URL of the LLM API endpoint
   instructions: "You are a helpful assistant in Minecraft. Respond concisely and friendly."  # Initial instructions for the model
   apikey: "your_api_key_here" # API key for authentication
   model: "gpt-4o-mini" # Language model to use (e.g., gpt-4, gpt-3.5-turbo, etc.)
