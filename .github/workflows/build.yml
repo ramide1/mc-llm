@@ -25,4 +25,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: mcllm
-        path: target/mcllm-1.0-SNAPSHOT.jar
+        path: target/mcllm-1.0-SNAPSHOT-jar-with-dependencies.jar
