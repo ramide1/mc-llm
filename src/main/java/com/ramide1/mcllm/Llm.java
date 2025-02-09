@@ -18,7 +18,7 @@ public class Llm implements CommandExecutor {
     }
 
     private String sendRequestToGPTApi(String url, String instructions, String sender, String question, String apikey,
-            String model) {
+            String model, int maxTokens) {
         try {
             if (url.isEmpty())
                 throw new Exception("Url is empty.");
@@ -32,7 +32,8 @@ public class Llm implements CommandExecutor {
                 messages = "{\"role\": \"system\",\"content\": \"" + instructions + "\"}" + "," + messages;
             }
             messages = "[" + messages + "]";
-            String data = "{\"model\": \"" + model + "\", \"messages\": " + messages + "}";
+            String data = "{\"model\": \"" + model + "\", \"messages\": " + messages + ", \"max_tokens\": " + maxTokens
+                    + "}";
             HttpRequest request = new HttpRequest(url, "POST", "application/json", "Bearer " + apikey, data);
             request.sendRequest();
             boolean error = request.getError();
@@ -52,7 +53,7 @@ public class Llm implements CommandExecutor {
     }
 
     private String sendRequestToGeminiApi(String instructions, String sender, String question, String apikey,
-            String model) {
+            String model, int maxTokens) {
         try {
             String url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key="
                     + apikey;
@@ -67,7 +68,8 @@ public class Llm implements CommandExecutor {
                         + "{\"role\": \"model\",\"parts\": [" + "{\"text\": \"Ok.\"}" + "]}" + "," + messages;
             }
             messages = "[" + messages + "]";
-            String data = "{\"contents\": " + messages + "}";
+            String data = "{\"contents\": " + messages + ", \"generationConfig\": {\"maxOutputTokens\": " + maxTokens
+                    + "}}";
             HttpRequest request = new HttpRequest(url, "POST", "application/json", "", data);
             request.sendRequest();
             boolean error = request.getError();
@@ -94,6 +96,7 @@ public class Llm implements CommandExecutor {
         String apiKey = plugin.getConfig().getString("Config.apikey", "");
         String model = plugin.getConfig().getString("Config.model", "gpt-4o-mini");
         boolean googleApi = plugin.getConfig().getBoolean("Config.googleapi", false);
+        int maxTokens = plugin.getConfig().getInt("Config.maxtokens", 800);
         if (sender instanceof Player) {
             Player player = (Player) sender;
             if (args.length >= 1) {
@@ -108,12 +111,12 @@ public class Llm implements CommandExecutor {
                         if (googleApi) {
                             String response = sendRequestToGeminiApi(instructions, player.getName(),
                                     question.toString(),
-                                    apiKey, model);
+                                    apiKey, model, maxTokens);
                             Bukkit.getScheduler().runTask(plugin, () -> player.sendMessage(response));
                         } else {
                             String response = sendRequestToGPTApi(url, instructions, player.getName(),
                                     question.toString(), apiKey,
-                                    model);
+                                    model, maxTokens);
                             Bukkit.getScheduler().runTask(plugin, () -> player.sendMessage(response));
                         }
                     }
@@ -133,13 +136,13 @@ public class Llm implements CommandExecutor {
                     public void run() {
                         if (googleApi) {
                             String response = sendRequestToGeminiApi(instructions, "console", question.toString(),
-                                    apiKey, model);
+                                    apiKey, model, maxTokens);
                             Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().info(response));
                         } else {
                             String response = sendRequestToGPTApi(url, instructions, "console",
                                     question.toString(),
                                     apiKey,
-                                    model);
+                                    model, maxTokens);
                             Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().info(response));
                         }
                     }

@@ -3,4 +3,5 @@ Config:
   instructions: "You are a helpful assistant in Minecraft. Respond concisely and friendly."
   apikey: ""
   model: "gpt-4o-mini"
+  maxtokens: 800
   googleapi: false

@@ -17,6 +17,7 @@ Config:
   instructions: "You are a helpful assistant in Minecraft. Respond concisely and friendly."  # Initial instructions for the model
   apikey: "your_api_key_here" # API key for authentication
   model: "gpt-4o-mini" # Language model to use (e.g., gpt-4, gpt-3.5-turbo, etc.)
+  maxtokens: 800 # Max output tokens
   googleapi: false # Enable or disable Google API usage (optional)
 ```
 # Explanation of Fields:
