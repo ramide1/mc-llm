@@ -1,7 +1,7 @@
 main: com.ramide1.mcllm.App
 name: mcllm
 version: 1.0
-api-version: 1.21.4
+api-version: 1.21.5
 commands:
   llm:
     description: Answer a question with llm
