@@ -3,7 +3,7 @@ McLLM is a plugin for Minecraft servers (Spigot) that allows users to interact w
 # Key Features
 LLM Interaction: Use in-game commands to query advanced language models.
 Flexible Configuration: Customize the API, model, and initial instructions via a configuration file.
-Multi-API Support: Compatible with APIs like OpenAI and Google (optional).
+Multi-API Support: Compatible with APIs like OpenAI.
 Easy to Use: Simple installation and quick setup.
 # Installation
 Download the .jar file from the actions section.
@@ -18,14 +18,12 @@ Config:
   apikey: "your_api_key_here" # API key for authentication
   model: "gpt-4o-mini" # Language model to use (e.g., gpt-4, gpt-3.5-turbo, etc.)
   maxtokens: 800 # Max output tokens
-  googleapi: false # Enable or disable Google API usage (optional)
 ```
 # Explanation of Fields:
 url: The URL of the language model API endpoint.
 instructions: Initial instructions sent to the model to define its behavior.
 apikey: Your API key for authenticating with the LLM service.
 model: The language model you want to use (e.g., gpt-4, gpt-3.5-turbo, etc.).
-googleapi: If you want to use Google's API instead of OpenAI, set this to true.
 # Usage
 Once the plugin is configured, players can use the following command in the game:
 /llm "your query here"

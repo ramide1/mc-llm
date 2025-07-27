@@ -4,4 +4,3 @@ Config:
   apikey: ""
   model: "gpt-4o-mini"
   maxtokens: 800
-  googleapi: false
