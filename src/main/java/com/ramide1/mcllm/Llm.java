@@ -73,7 +73,11 @@ public class Llm implements CommandExecutor {
                         String response = sendRequestToApi(url, instructions, player.getName(),
                                 question.toString(), apiKey,
                                 model, maxTokens);
-                        Bukkit.getScheduler().runTask(plugin, () -> player.sendMessage(response));
+                        LlmEvent llmEvent = new LlmEvent(player.getName(), false, question.toString(), response);
+                        Bukkit.getPluginManager().callEvent(llmEvent);
+                        if (!llmEvent.isCancelled()) {
+                            Bukkit.getScheduler().runTask(plugin, () -> player.sendMessage(response));
+                        }
                     }
                 }.runTaskAsynchronously(plugin);
             } else {
@@ -93,7 +97,11 @@ public class Llm implements CommandExecutor {
                                 question.toString(),
                                 apiKey,
                                 model, maxTokens);
-                        Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().info(response));
+                        LlmEvent llmEvent = new LlmEvent("console", true, question.toString(), response);
+                        Bukkit.getPluginManager().callEvent(llmEvent);
+                        if (!llmEvent.isCancelled()) {
+                            Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().info(response));
+                        }
                     }
                 }.runTaskAsynchronously(plugin);
             } else {
