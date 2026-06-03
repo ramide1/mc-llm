@@ -4,7 +4,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.command.Command;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,6 +13,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Llm implements CommandExecutor {
     private App plugin;
+
+    private static boolean isFolia() {
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
 
     public Llm(App plugin) {
         this.plugin = plugin;
@@ -52,66 +62,75 @@ public class Llm implements CommandExecutor {
         }
     }
 
+    private void processResponse(String response, CommandSender sender, String senderName, String question,
+            boolean isPlayer) {
+        LlmEvent llmEvent = new LlmEvent(senderName, !isPlayer, question, response);
+        Runnable callEvent = () -> Bukkit.getPluginManager().callEvent(llmEvent);
+        if (isFolia()) {
+            plugin.getServer().getGlobalRegionScheduler().run(plugin, task -> callEvent.run());
+        } else {
+            Bukkit.getScheduler().runTask(plugin, callEvent);
+        }
+        if (!llmEvent.isCancelled()) {
+            if (isPlayer) {
+                Player player = (Player) sender;
+                if (!player.isOnline())
+                    return;
+                Runnable sendMessage = () -> player.sendMessage(response);
+                if (isFolia()) {
+                    player.getScheduler().run(plugin, task -> sendMessage.run(), null);
+                } else {
+                    Bukkit.getScheduler().runTask(plugin, sendMessage);
+                }
+            } else {
+                Runnable logInfo = () -> plugin.getLogger().info(response);
+                if (isFolia()) {
+                    plugin.getServer().getGlobalRegionScheduler().run(plugin, task -> logInfo.run());
+                } else {
+                    Bukkit.getScheduler().runTask(plugin, logInfo);
+                }
+            }
+        }
+    }
+
     public boolean onCommand(CommandSender sender, Command llm, String label, String[] args) {
+        boolean isPlayer = sender instanceof Player;
+        if (args.length < 1) {
+            if (isPlayer) {
+                ((Player) sender).sendMessage(
+                        Component.text("This command needs at least one argument.").color(NamedTextColor.RED));
+            } else {
+                plugin.getLogger().info("This command needs at least one argument.");
+            }
+            return true;
+        }
         String url = plugin.getConfig().getString("Config.url", "https://api.openai.com/v1/chat/completions");
         String instructions = plugin.getConfig().getString("Config.instructions",
                 "You are a helpful assistant in Minecraft. Respond concisely and friendly.");
         String apiKey = plugin.getConfig().getString("Config.apikey", "");
         String model = plugin.getConfig().getString("Config.model", "gpt-4o-mini");
         int maxTokens = plugin.getConfig().getInt("Config.maxtokens", 800);
-        if (sender instanceof Player) {
-            Player player = (Player) sender;
-            if (args.length >= 1) {
-                StringBuilder question = new StringBuilder();
-                for (String arg : args) {
-                    question.append(arg).append(" ");
-                }
-                question.deleteCharAt(question.length() - 1);
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        String response = sendRequestToApi(url, instructions, player.getName(),
-                                question.toString(), apiKey,
-                                model, maxTokens);
-                        LlmEvent llmEvent = new LlmEvent(player.getName(), false, question.toString(), response);
-                        Bukkit.getPluginManager().callEvent(llmEvent);
-                        if (!llmEvent.isCancelled()) {
-                            Bukkit.getScheduler().runTask(plugin, () -> player.sendMessage(response));
-                        }
-                    }
-                }.runTaskAsynchronously(plugin);
-            } else {
-                player.sendMessage(ChatColor.RED + "This command needs at least one argument.");
-            }
+        String question = String.join(" ", args);
+        String senderName = isPlayer ? ((Player) sender).getName() : "console";
+        if (isFolia()) {
+            plugin.getServer().getAsyncScheduler().runNow(plugin, task -> {
+                String response = sendRequestToApi(url, instructions, senderName, question, apiKey, model, maxTokens);
+                processResponse(response, sender, senderName, question, isPlayer);
+            });
         } else {
-            if (args.length >= 1) {
-                StringBuilder question = new StringBuilder();
-                for (String arg : args) {
-                    question.append(arg).append(" ");
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    String response = sendRequestToApi(url, instructions, senderName, question, apiKey, model,
+                            maxTokens);
+                    processResponse(response, sender, senderName, question, isPlayer);
                 }
-                question.deleteCharAt(question.length() - 1);
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        String response = sendRequestToApi(url, instructions, "console",
-                                question.toString(),
-                                apiKey,
-                                model, maxTokens);
-                        LlmEvent llmEvent = new LlmEvent("console", true, question.toString(), response);
-                        Bukkit.getPluginManager().callEvent(llmEvent);
-                        if (!llmEvent.isCancelled()) {
-                            Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().info(response));
-                        }
-                    }
-                }.runTaskAsynchronously(plugin);
-            } else {
-                plugin.getLogger().info(ChatColor.RED + "This command needs at least one argument.");
-            }
+            }.runTaskAsynchronously(plugin);
         }
         return true;
     }
 
-    private boolean saveHistory(String sender, String history) {
+    private synchronized boolean saveHistory(String sender, String history) {
         try {
             plugin.dataConfig.set(sender, history);
             plugin.dataConfig.save(plugin.data);
@@ -121,7 +140,7 @@ public class Llm implements CommandExecutor {
         }
     }
 
-    private String getHistory(String sender) {
+    private synchronized String getHistory(String sender) {
         return plugin.dataConfig.contains(sender) ? plugin.dataConfig.getString(sender) : "";
     }
 }

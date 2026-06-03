@@ -1,5 +1,5 @@
 # McLLM - Minecraft LLM Plugin
-McLLM is a plugin for Minecraft servers (Spigot) that allows users to interact with large language models (LLMs) directly in the game. With this plugin, players can use commands like /llm "query" to get AI-generated responses by leveraging APIs such as OpenAI.
+McLLM is a plugin for Minecraft servers (Paper) that allows users to interact with large language models (LLMs) directly in the game. With this plugin, players can use commands like /llm "query" to get AI-generated responses by leveraging APIs such as OpenAI.
 # Key Features
 LLM Interaction: Use in-game commands to query advanced language models.
 Flexible Configuration: Customize the API, model, and initial instructions via a configuration file.
@@ -7,7 +7,7 @@ Multi-API Support: Compatible with APIs like OpenAI.
 Easy to Use: Simple installation and quick setup.
 # Installation
 Download the .jar file from the actions section.
-Place the .jar file in the plugins folder of your Spigot server.
+Place the .jar file in the plugins folder of your Paper server.
 Restart the server to load the plugin.
 # Configuration
 The plugin is configured using the config.yml file, which is automatically generated the first time the plugin runs. Below is an example configuration:
