@@ -28,19 +28,17 @@ public class Llm implements CommandExecutor {
     }
 
     private String sendRequestToApi(String url, String instructions, String sender, String question, String apikey,
-            String model, int maxTokens) {
+            String model, int maxTokens, boolean isPlayer) {
         try {
             if (url.isEmpty())
                 throw new Exception("Url is empty.");
             String messages = "{\"role\": \"user\",\"content\": \"" + question + "\"}";
-            String history = getHistory(sender);
-            if (!history.isEmpty()) {
+            String history = getHistory(sender, isPlayer);
+            if (!history.isEmpty())
                 messages = history + "," + messages;
-            }
             String newHistory = messages;
-            if (!instructions.isEmpty()) {
+            if (!instructions.isEmpty())
                 messages = "{\"role\": \"system\",\"content\": \"" + instructions + "\"}" + "," + messages;
-            }
             messages = "[" + messages + "]";
             String data = "{\"model\": \"" + model + "\", \"messages\": " + messages + ", \"max_tokens\": " + maxTokens
                     + "}";
@@ -55,7 +53,7 @@ public class Llm implements CommandExecutor {
             String content = rootNode.path("choices").path(0).path("message").path("content").asText()
                     .replace("\\n", "").replace("\\", "").replace("\"", "").replace("{", "").replace("}", "");
             newHistory = newHistory + "," + "{\"role\": \"assistant\",\"content\": \"" + content + "\"}";
-            saveHistory(sender, newHistory);
+            saveHistory(sender, newHistory, isPlayer);
             return content;
         } catch (Exception e) {
             return e.getMessage();
@@ -114,7 +112,8 @@ public class Llm implements CommandExecutor {
         String senderName = isPlayer ? ((Player) sender).getName() : "console";
         if (isFolia()) {
             plugin.getServer().getAsyncScheduler().runNow(plugin, task -> {
-                String response = sendRequestToApi(url, instructions, senderName, question, apiKey, model, maxTokens);
+                String response = sendRequestToApi(url, instructions, senderName, question, apiKey, model, maxTokens,
+                        isPlayer);
                 processResponse(response, sender, senderName, question, isPlayer);
             });
         } else {
@@ -122,7 +121,7 @@ public class Llm implements CommandExecutor {
                 @Override
                 public void run() {
                     String response = sendRequestToApi(url, instructions, senderName, question, apiKey, model,
-                            maxTokens);
+                            maxTokens, isPlayer);
                     processResponse(response, sender, senderName, question, isPlayer);
                 }
             }.runTaskAsynchronously(plugin);
@@ -130,9 +129,9 @@ public class Llm implements CommandExecutor {
         return true;
     }
 
-    private synchronized boolean saveHistory(String sender, String history) {
+    private synchronized boolean saveHistory(String sender, String history, boolean isPlayer) {
         try {
-            plugin.dataConfig.set(sender, history);
+            plugin.dataConfig.set(isPlayer ? "players." + sender : sender, history);
             plugin.dataConfig.save(plugin.data);
             return true;
         } catch (Exception e) {
@@ -140,7 +139,8 @@ public class Llm implements CommandExecutor {
         }
     }
 
-    private synchronized String getHistory(String sender) {
-        return plugin.dataConfig.contains(sender) ? plugin.dataConfig.getString(sender) : "";
+    private synchronized String getHistory(String sender, boolean isPlayer) {
+        String path = isPlayer ? "players." + sender : sender;
+        return plugin.dataConfig.contains(path) ? plugin.dataConfig.getString(path) : "";
     }
 }
