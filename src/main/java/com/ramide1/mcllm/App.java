@@ -7,25 +7,14 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 public class App extends JavaPlugin {
     String pluginName = "Minecraft LLM";
-    File config;
-    File data;
-    FileConfiguration dataConfig;
+    DatabaseManager dbManager;
 
     @Override
     public void onEnable() {
-        config = new File(getDataFolder(), "config.yml");
-        if (!config.exists()) {
-            saveDefaultConfig();
-        }
-        data = new File(getDataFolder(), "data.yml");
-        dataConfig = YamlConfiguration.loadConfiguration(data);
-        if (!data.exists()) {
-            try {
-                dataConfig.save(data);
-            } catch (Exception e) {
-                getLogger().info("An error has ocurred while saving data file");
-            }
-        }
+        saveDefaultConfig();
+        
+        dbManager = new DatabaseManager(this);
+        
         getCommand("llm").setExecutor(new Llm(this));
         getCommand("llmreload").setExecutor(new Reload(this));
         getLogger().info(pluginName + " has been enabled!");
@@ -33,6 +22,9 @@ public class App extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (dbManager != null) {
+            dbManager.close();
+        }
         getLogger().info(pluginName + " has been disabled!");
     }
 }

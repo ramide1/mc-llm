@@ -1,7 +1,7 @@
 main: com.ramide1.mcllm.App
 name: mcllm
 version: 1.0
-api-version: 26.1.2
+api-version: 26.2
 folia-supported: true
 commands:
   llm:
