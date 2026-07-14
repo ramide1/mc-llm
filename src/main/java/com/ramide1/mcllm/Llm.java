@@ -34,12 +34,16 @@ public class Llm implements CommandExecutor {
     }
 
     private String sendRequestToApi(String instructions, String senderName, String question, String apiKey,
-                                   String model, int maxTokens, boolean isPlayer) {
+                                   String baseUrl, String model, int maxTokens, boolean isPlayer) {
         try {
-            // Usamos el cliente oficial de OpenAI
-            OpenAIClient client = OpenAIOkHttpClient.builder()
-                    .apiKey(apiKey)
-                    .build();
+            OpenAIOkHttpClient.Builder builder = OpenAIOkHttpClient.builder()
+                    .apiKey(apiKey);
+
+            if (baseUrl != null && !baseUrl.isEmpty()) {
+                builder.baseUrl(baseUrl);
+            }
+
+            OpenAIClient client = builder.build();
             
             // Construimos la entrada. La nueva API de Responses simplifica esto, 
             // pero para mantener el historial necesitamos pasar los mensajes.
@@ -126,22 +130,23 @@ public class Llm implements CommandExecutor {
 
         String instructions = plugin.getConfig().getString("Config.instructions",
                 "You are a helpful assistant in Minecraft. Respond concisely and friendly.");
-        String apiKey = plugin.getConfig().getString("Config.apikey", "");
+        String apiKey = plugin.getConfig().getString("Config.apiKey", "");
+        String baseUrl = plugin.getConfig().getString("Config.baseUrl", "");
         String model = plugin.getConfig().getString("Config.model", "gpt-4o-mini");
-        int maxTokens = plugin.getConfig().getInt("Config.maxtokens", 800);
+        int maxTokens = plugin.getConfig().getInt("Config.maxTokens", 800);
         String question = String.join(" ", args);
         String senderName = isPlayer ? ((Player) sender).getName() : "console";
 
         if (isFolia()) {
             plugin.getServer().getAsyncScheduler().runNow(plugin, task -> {
-                String response = sendRequestToApi(instructions, senderName, question, apiKey, model, maxTokens, isPlayer);
+                String response = sendRequestToApi(instructions, senderName, question, apiKey, baseUrl, model, maxTokens, isPlayer);
                 processResponse(response, sender, senderName, question, isPlayer);
             });
         } else {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    String response = sendRequestToApi(instructions, senderName, question, apiKey, model, maxTokens, isPlayer);
+                    String response = sendRequestToApi(instructions, senderName, question, apiKey, baseUrl, model, maxTokens, isPlayer);
                     processResponse(response, sender, senderName, question, isPlayer);
                 }
             }.runTaskAsynchronously(plugin);

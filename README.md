@@ -1,38 +1,61 @@
-# McLLM - Minecraft LLM Plugin
-McLLM is a plugin for Minecraft servers (Paper) that allows users to interact with large language models (LLMs) directly in the game. With this plugin, players can use commands like /llm "query" to get AI-generated responses by leveraging APIs such as OpenAI.
-# Key Features
-LLM Interaction: Use in-game commands to query advanced language models.
-Flexible Configuration: Customize the API, model, and initial instructions via a configuration file.
-Multi-API Support: Compatible with APIs like OpenAI.
-Easy to Use: Simple installation and quick setup.
-# Installation
-Download the .jar file from the actions section.
-Place the .jar file in the plugins folder of your Paper server.
-Restart the server to load the plugin.
-# Configuration
-The plugin is configured using the config.yml file, which is automatically generated the first time the plugin runs. Below is an example configuration:
+# Minecraft LLM (Paper/Folia)
+
+A plugin for Minecraft servers (Paper/Folia) that lets you chat with AI directly in the game using the OpenAI API.
+
+## Features
+
+- `/llm <question>` command to ask the AI
+- `/llmreload` command to reload configuration
+- Conversation history saved in SQLite
+- Configurable (API key, base URL, model, max tokens, instructions)
+- Compatible with Paper and Folia
+
+## Installation
+
+1. Download the `.jar` file from the actions section
+2. Place the `.jar` file in the `plugins/` folder of your Paper server
+3. Restart the server to load the plugin
+
+## Configuration
+
+The configuration file is located at `plugins/MinecraftLLM/config.yml`:
+
 ```yml
 Config:
-  url: "https://api.openai.com/v1/chat/completions" # URL of the LLM API endpoint
-  instructions: "You are a helpful assistant in Minecraft. Respond concisely and friendly."  # Initial instructions for the model
-  apikey: "your_api_key_here" # API key for authentication
-  model: "gpt-4o-mini" # Language model to use (e.g., gpt-4, gpt-3.5-turbo, etc.)
-  maxtokens: 800 # Max output tokens
+  instructions: "You are a helpful assistant in Minecraft. Respond concisely and friendly."
+  apiKey: "your-api-key-here"
+  baseUrl: ""
+  model: "gpt-4o-mini"
+  maxTokens: 800
 ```
-# Explanation of Fields:
-url: The URL of the language model API endpoint.
-instructions: Initial instructions sent to the model to define its behavior.
-apikey: Your API key for authenticating with the LLM service.
-model: The language model you want to use (e.g., gpt-4, gpt-3.5-turbo, etc.).
-# Usage
-Once the plugin is configured, players can use the following command in the game:
-/llm "your query here"
-For example:
-/llm "How do I build an automatic farm in Minecraft?"
-The plugin will send the query to the configured language model and return the response in the game chat.
-# Contributing
-Contributions are welcome! If you have ideas to improve the plugin, find bugs, or want to add new features, feel free to contribute. You can do so in the following ways:
-Report Issues: Open an issue on GitHub to report bugs or suggest improvements.
-Submit Pull Requests: If you've implemented a feature or fix, submit a pull request for review.
-# License
-This project is licensed under the MIT License. Feel free to use, modify, and distribute it according to the license terms.
+
+### Parameters
+
+- `instructions`: System instructions for the AI
+- `apiKey`: Your OpenAI API key
+- `baseUrl`: API base URL (empty = official OpenAI, e.g. `http://localhost:11434/v1` for Ollama)
+- `model`: AI model to use (default: gpt-4o-mini)
+- `maxTokens`: Maximum number of tokens in the response
+
+## Commands
+
+- `/llm <question>` - Ask a question to the AI
+- `/llmreload` - Reload configuration
+
+## Dependencies
+
+- [Paper](https://papermc.io/) or [Folia](https://papermc.io/software/folia)
+- [OpenAI Java SDK](https://github.com/openai/openai-java) 4.0.0
+- [SQLite JDBC](https://github.com/xerial/sqlite-jdbc) 3.45.1.0
+
+## Building
+
+```bash
+./gradlew build
+```
+
+The JAR will be generated in `build/libs/`
+
+## License
+
+MIT License - See [LICENSE](LICENSE) for details.
