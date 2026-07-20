@@ -10,3 +10,10 @@ commands:
   llmreload:
     description: Reload llm configuration
     permission: mcllm.llmreload
+permissions:
+  mcllm.llm:
+    description: Allows using the /llm command
+    default: true
+  mcllm.llmreload:
+    description: Allows reloading the plugin configuration
+    default: op

@@ -16,7 +16,7 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.2.build.+")
-    implementation("com.openai:openai-java:4.0.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.4")
     implementation("org.xerial:sqlite-jdbc:3.45.1.0")
 }
 

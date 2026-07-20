@@ -9,7 +9,7 @@ public class LlmEvent extends Event implements Cancellable {
     private final String playerName;
     private final boolean isConsole;
     private final String message;
-    private final String response;
+    private String response;
     private boolean isCancelled;
 
     public static HandlerList getHandlerList() {
@@ -52,5 +52,9 @@ public class LlmEvent extends Event implements Cancellable {
 
     public String getResponse() {
         return this.response;
+    }
+
+    public void setResponse(String response) {
+        this.response = response;
     }
 }

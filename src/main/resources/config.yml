@@ -4,3 +4,6 @@ Config:
   baseUrl: ""
   model: "gpt-4o-mini"
   maxTokens: 800
+  maxHistoryMessages: 50
+  hideReasoning: false
+  reasoningEffort: ""

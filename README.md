@@ -45,7 +45,7 @@ Config:
 ## Dependencies
 
 - [Paper](https://papermc.io/) or [Folia](https://papermc.io/software/folia)
-- [OpenAI Java SDK](https://github.com/openai/openai-java) 4.0.0
+- [Jackson Databind](https://github.com/FasterXML/jackson-databind) 2.21.4
 - [SQLite JDBC](https://github.com/xerial/sqlite-jdbc) 3.45.1.0
 
 ## Building

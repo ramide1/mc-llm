@@ -1,9 +1,6 @@
 package com.ramide1.mcllm;
 
-import java.io.File;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 public class App extends JavaPlugin {
     String pluginName = "Minecraft LLM";
@@ -12,9 +9,10 @@ public class App extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        
-        dbManager = new DatabaseManager(this);
-        
+
+        int maxHistoryMessages = Math.max(0, Math.min(500, getConfig().getInt("Config.maxHistoryMessages", 50)));
+        dbManager = new DatabaseManager(this, maxHistoryMessages);
+
         getCommand("llm").setExecutor(new Llm(this));
         getCommand("llmreload").setExecutor(new Reload(this));
         getLogger().info(pluginName + " has been enabled!");
